@@ -48,52 +48,18 @@ export async function GET(request: NextRequest) {
     const todayISO = getTashkentDateISO(tashkentNow);
     const nowMinutes = tashkentNow.getUTCHours() * 60 + tashkentNow.getUTCMinutes();
 
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-    console.log("DEBUG url=", JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_URL));
-    console.log("DEBUG todayISO=", todayISO, "nowMinutes=", nowMinutes);
-    console.log(
-      "DEBUG serviceKey len=",
-      serviceKey.length,
-      "starts=",
-      serviceKey.slice(0, 12),
-      "ends=",
-      serviceKey.slice(-8)
-    );
-
-    const { data: allToday, error: allTodayErr } = await supabase
-      .from("appointments")
-      .select("id, appointment_date, reminder_sent")
-      .eq("appointment_date", todayISO);
-    console.log("DEBUG allToday=", JSON.stringify(allToday), "err=", JSON.stringify(allTodayErr));
-
-    const step1 = await supabase
-      .from("appointments")
-      .select("*")
-      .eq("appointment_date", todayISO)
-      .eq("reminder_sent", false);
-    console.log("DEBUG step1(date+reminder_sent)=", JSON.stringify(step1.data), "err=", JSON.stringify(step1.error));
-
-    const step2 = await supabase
-      .from("appointments")
-      .select("*")
-      .eq("appointment_date", todayISO)
-      .eq("reminder_sent", false)
-      .neq("status", "cancelled");
-    console.log("DEBUG step2(+status)=", JSON.stringify(step2.data), "err=", JSON.stringify(step2.error));
-
     const { data, error } = await supabase
       .from("appointments")
       .select("*")
       .eq("appointment_date", todayISO)
       .eq("reminder_sent", false)
-      .neq("status", "cancelled")
-      .order("appointment_time", { ascending: true });
-
-    console.log("DEBUG mainQuery data=", JSON.stringify(data), "error=", JSON.stringify(error));
+      .neq("status", "cancelled");
 
     if (error) throw new Error(error.message);
 
-    const appointments = (data as Appointment[]) ?? [];
+    const appointments = ((data as Appointment[]) ?? []).sort((a, b) =>
+      a.appointment_time.localeCompare(b.appointment_time)
+    );
 
     // Qabulgacha REMINDER_MINUTES_BEFORE atrofida (WINDOW_MINUTES oynasi bilan) qolgan yozuvlar.
     const dueAppointments = appointments.filter((a) => {
