@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PatientHistory } from "@/components/PatientHistory";
-import { Upload, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { Upload, Trash2, Loader2, AlertTriangle, X } from "lucide-react";
 import { supabase, PATIENT_FILES_BUCKET, MAX_CONCURRENT_APPOINTMENTS } from "@/lib/supabase/client";
 import {
   compressImageFile,
@@ -95,6 +95,7 @@ export function AppointmentModal({
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
 
   useEffect(() => {
     if (appointment) {
@@ -181,6 +182,7 @@ export function AppointmentModal({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
@@ -263,8 +265,8 @@ export function AppointmentModal({
             <Input
               type="number"
               min={0}
-              value={form.amount}
-              onChange={(e) => update("amount", Number(e.target.value))}
+              value={form.amount === 0 ? "" : form.amount}
+              onChange={(e) => update("amount", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </div>
           <div className="space-y-1">
@@ -272,8 +274,8 @@ export function AppointmentModal({
             <Input
               type="number"
               min={0}
-              value={form.paid_amount}
-              onChange={(e) => update("paid_amount", Number(e.target.value))}
+              value={form.paid_amount === 0 ? "" : form.paid_amount}
+              onChange={(e) => update("paid_amount", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </div>
 
@@ -347,13 +349,13 @@ export function AppointmentModal({
               )}
             </div>
             {form.file_url && isImageUrl(form.file_url) && (
-              <a href={form.file_url} target="_blank" rel="noreferrer">
+              <button type="button" onClick={() => setImagePreviewOpen(true)} className="block">
                 <img
                   src={form.file_url}
                   alt="Rentgen / Foto"
                   className="mt-2 h-24 w-24 rounded-md border object-cover"
                 />
-              </a>
+              </button>
             )}
           </div>
 
@@ -387,5 +389,27 @@ export function AppointmentModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {imagePreviewOpen && form.file_url && (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
+        onClick={() => setImagePreviewOpen(false)}
+      >
+        <img
+          src={form.file_url}
+          alt="Rentgen / Foto"
+          className="max-h-full max-w-full rounded-md object-contain"
+        />
+        <button
+          type="button"
+          onClick={() => setImagePreviewOpen(false)}
+          className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-black hover:bg-white"
+          aria-label="Yopish"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+    )}
+    </>
   );
 }
