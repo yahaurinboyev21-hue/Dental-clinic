@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, CalendarDays, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,9 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const dateISO = useMemo(() => formatDateISO(selectedDate), [selectedDate]);
   const todayISO = useMemo(() => formatDateISO(new Date()), []);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -147,14 +150,16 @@ export default function Home() {
         </Button>
         <div className="flex flex-col items-center">
           <span className="font-semibold">
-            {viewMode === "month"
-              ? selectedDate.toLocaleDateString("uz-UZ", { month: "long", year: "numeric" })
-              : selectedDate.toLocaleDateString("uz-UZ", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+            {mounted
+              ? viewMode === "month"
+                ? selectedDate.toLocaleDateString("uz-UZ", { month: "long", year: "numeric" })
+                : selectedDate.toLocaleDateString("uz-UZ", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })
+              : " "}
           </span>
           <button
             className="text-xs text-primary underline print:hidden"
