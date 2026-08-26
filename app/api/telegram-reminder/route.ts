@@ -48,6 +48,23 @@ export async function GET(request: NextRequest) {
     const todayISO = getTashkentDateISO(tashkentNow);
     const nowMinutes = tashkentNow.getUTCHours() * 60 + tashkentNow.getUTCMinutes();
 
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+    console.log("DEBUG todayISO=", todayISO, "nowMinutes=", nowMinutes);
+    console.log(
+      "DEBUG serviceKey len=",
+      serviceKey.length,
+      "starts=",
+      serviceKey.slice(0, 12),
+      "ends=",
+      serviceKey.slice(-8)
+    );
+
+    const { data: allToday, error: allTodayErr } = await supabase
+      .from("appointments")
+      .select("id, appointment_date, reminder_sent")
+      .eq("appointment_date", todayISO);
+    console.log("DEBUG allToday=", JSON.stringify(allToday), "err=", JSON.stringify(allTodayErr));
+
     const { data, error } = await supabase
       .from("appointments")
       .select("*")
