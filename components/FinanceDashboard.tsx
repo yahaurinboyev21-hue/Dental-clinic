@@ -77,6 +77,21 @@ export function FinanceDashboard({ todayISO }: FinanceDashboardProps) {
       setLoading(false);
     }
     loadStats();
+
+    const channel = supabase
+      .channel(`finance-dashboard-${todayISO}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        () => {
+          loadStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [todayISO]);
 
   const cards = [
