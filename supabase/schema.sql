@@ -28,6 +28,11 @@ create index if not exists idx_appointments_phone on appointments (phone);
 -- Realtime uchun jadvalni publication'ga qo'shish
 alter publication supabase_realtime add table appointments;
 
+-- DELETE/UPDATE hodisalarida to'liq qator (barcha ustunlar) WAL'ga yozilishi uchun —
+-- aks holda filtrlangan Realtime obunalari (masalan appointment_date bo'yicha)
+-- o'chirilgan/yangilangan qatorlarni "ko'rmay" qoladi.
+alter table appointments replica identity full;
+
 -- Row Level Security — FAQAT tizimga kirgan (authenticated) xodimlarga ruxsat beriladi.
 alter table appointments enable row level security;
 
