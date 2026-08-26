@@ -37,5 +37,12 @@ export function createServiceRoleClient() {
   if (!url || !serviceKey) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY yoki SUPABASE_URL topilmadi.");
   }
-  return createServiceClient(url, serviceKey, { auth: { persistSession: false } });
+  return createServiceClient(url, serviceKey, {
+    auth: { persistSession: false },
+    // Next.js fetch() natijalarini avtomatik keshlab qo'yadi — bu server-side
+    // so'rovlar har doim eng so'nggi ma'lumotni olishi uchun keshni o'chiramiz.
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
+    },
+  });
 }
