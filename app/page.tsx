@@ -59,10 +59,11 @@ export default function Home() {
   const filteredAppointments = useMemo(() => {
     if (!search.trim()) return appointments;
     const q = search.trim().toLowerCase();
+    const qDigits = q.replace(/\D/g, "");
     return appointments.filter(
       (a) =>
         `${a.first_name} ${a.last_name}`.toLowerCase().includes(q) ||
-        a.phone.replace(/\D/g, "").includes(q.replace(/\D/g, ""))
+        (qDigits.length > 0 && a.phone.replace(/\D/g, "").includes(qDigits))
     );
   }, [appointments, search]);
 
