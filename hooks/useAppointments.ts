@@ -1,9 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { supabase, PATIENT_FILES_BUCKET } from "@/lib/supabase/client";
 import { getPaymentStatus } from "@/lib/utils";
 import type { Appointment, AppointmentInput } from "@/types";
+
+// Public storage URL'dan bucket ichidagi fayl yo'lini ajratib olish (masalan
+// ".../storage/v1/object/public/patient-files/998901234567/123-rasm.jpg" -> "998901234567/123-rasm.jpg").
+function extractStoragePath(fileUrl: string): string | null {
+  const marker = `/object/public/${PATIENT_FILES_BUCKET}/`;
+  const idx = fileUrl.indexOf(marker);
+  if (idx === -1) return null;
+  return decodeURIComponent(fileUrl.slice(idx + marker.length));
+}
 
 export function useAppointments(dateISO: string) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -51,6 +60,10 @@ export function useAppointments(dateISO: string) {
     };
   }, [dateISO, fetchAppointments]);
 
+  // Eslatma: Realtime obuna cross-device sinxronizatsiya uchun ishlatiladi, lekin
+  // vaqtincha uzilib qolishi mumkin. Shuning uchun har bir amal joriy oynadagi
+  // holatni ham to'g'ridan-to'g'ri yangilaydi — bu Realtime kechikkan yoki
+  // uzilgan taqdirda ham foydalanuvchi darhol to'g'ri natijani ko'rishini kafolatlaydi.
   const addAppointment = useCallback(async (input: AppointmentInput) => {
     const payment_status = getPaymentStatus(input.amount, input.paid_amount);
     const { data, error } = await supabase
@@ -59,7 +72,11 @@ export function useAppointments(dateISO: string) {
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return data as Appointment;
+    const created = data as Appointment;
+    setAppointments((prev) =>
+      [...prev, created].sort((a, b) => a.appointment_time.localeCompare(b.appointment_time))
+    );
+    return created;
   }, []);
 
   const updateAppointment = useCallback(
@@ -78,15 +95,36 @@ export function useAppointments(dateISO: string) {
         .select()
         .single();
       if (error) throw new Error(error.message);
-      return data as Appointment;
+      const updated = data as Appointment;
+      setAppointments((prev) =>
+        prev
+          .map((a) => (a.id === id ? updated : a))
+          .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time))
+      );
+      return updated;
     },
     [appointments]
   );
 
-  const deleteAppointment = useCallback(async (id: string) => {
-    const { error } = await supabase.from("appointments").delete().eq("id", id);
-    if (error) throw new Error(error.message);
-  }, []);
+  const deleteAppointment = useCallback(
+    async (id: string) => {
+      const current = appointments.find((a) => a.id === id);
+
+      const { error } = await supabase.from("appointments").delete().eq("id", id);
+      if (error) throw new Error(error.message);
+
+      // Yozuvga biriktirilgan rasm/fayl bo'lsa, uni ham storage'dan o'chirish.
+      if (current?.file_url) {
+        const path = extractStoragePath(current.file_url);
+        if (path) {
+          await supabase.storage.from(PATIENT_FILES_BUCKET).remove([path]);
+        }
+      }
+
+      setAppointments((prev) => prev.filter((a) => a.id !== id));
+    },
+    [appointments]
+  );
 
   return {
     appointments,
