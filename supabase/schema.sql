@@ -18,6 +18,7 @@ create table if not exists appointments (
   recall_date date,
   notes text,
   file_url text,
+  reminder_sent boolean not null default false,
   created_at timestamptz not null default now()
 );
 
