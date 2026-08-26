@@ -52,3 +52,7 @@ npm run dev
 - 📅 Kun / Hafta / Oy ko'rinishlari
 - 📊 Excel export va Chop etish (Print)
 - 🎨 Tibbiy teal palitra, gradient fon, dark mode
+
+## Deploy
+
+Vercel: https://dental-clinic-pi-bice.vercel.app
