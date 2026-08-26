@@ -66,6 +66,21 @@ export async function GET(request: NextRequest) {
       .eq("appointment_date", todayISO);
     console.log("DEBUG allToday=", JSON.stringify(allToday), "err=", JSON.stringify(allTodayErr));
 
+    const step1 = await supabase
+      .from("appointments")
+      .select("*")
+      .eq("appointment_date", todayISO)
+      .eq("reminder_sent", false);
+    console.log("DEBUG step1(date+reminder_sent)=", JSON.stringify(step1.data), "err=", JSON.stringify(step1.error));
+
+    const step2 = await supabase
+      .from("appointments")
+      .select("*")
+      .eq("appointment_date", todayISO)
+      .eq("reminder_sent", false)
+      .neq("status", "cancelled");
+    console.log("DEBUG step2(+status)=", JSON.stringify(step2.data), "err=", JSON.stringify(step2.error));
+
     const { data, error } = await supabase
       .from("appointments")
       .select("*")
