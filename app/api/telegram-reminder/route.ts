@@ -5,7 +5,7 @@ import type { Appointment } from "@/types";
 export const dynamic = "force-dynamic";
 
 // Bemor qabulidan necha daqiqa oldin eslatma yuborilishi kerakligi.
-const REMINDER_MINUTES_BEFORE = 30;
+const REMINDER_MINUTES_BEFORE = 60;
 // Tekshiruv oynasi kengligi — tashqi cron chaqiruv oralig'idan (masalan 10 daqiqa)
 // kichik bo'lmasligi kerak, aks holda ba'zi qabullar chetlab o'tilishi mumkin.
 const WINDOW_MINUTES = 15;
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     let sentCount = 0;
     for (const a of dueAppointments) {
       const message =
-        `⏰ <b>30 daqiqadan keyin qabul boshlanadi</b>\n\n` +
+        `⏰ <b>1 soatdan keyin qabul boshlanadi</b>\n\n` +
         `👤 ${a.first_name} ${a.last_name}\n` +
         `🕐 ${a.appointment_time.slice(0, 5)}\n` +
         `🦷 ${a.service}\n` +
