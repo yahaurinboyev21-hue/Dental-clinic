@@ -15,6 +15,7 @@ export interface Appointment {
   appointment_time: string; // HH:mm:ss yoki HH:mm
   duration_minutes: number;
   recall_date: string | null;
+  recall_time: string | null;
   notes: string | null;
   file_url: string | null;
   reminder_sent: boolean;

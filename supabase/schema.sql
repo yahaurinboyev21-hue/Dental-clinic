@@ -16,6 +16,7 @@ create table if not exists appointments (
   appointment_time time not null,
   duration_minutes integer not null default 30,
   recall_date date,
+  recall_time time,
   notes text,
   file_url text,
   reminder_sent boolean not null default false,

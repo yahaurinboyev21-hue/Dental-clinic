@@ -73,6 +73,7 @@ const EMPTY_FORM: AppointmentInput = {
   appointment_time: "09:00",
   duration_minutes: 30,
   recall_date: null,
+  recall_time: null,
   notes: null,
   file_url: null,
 };
@@ -312,11 +313,19 @@ export function AppointmentModal({
 
           <div className="space-y-1">
             <Label>Navbatdagi chaqiruv sanasi</Label>
-            <Input
-              type="date"
-              value={form.recall_date ?? ""}
-              onChange={(e) => update("recall_date", e.target.value || null)}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={form.recall_date ?? ""}
+                onChange={(e) => update("recall_date", e.target.value || null)}
+              />
+              <Input
+                type="time"
+                className="w-28"
+                value={form.recall_time ?? ""}
+                onChange={(e) => update("recall_time", e.target.value || null)}
+              />
+            </div>
           </div>
 
           <div className="space-y-1">
