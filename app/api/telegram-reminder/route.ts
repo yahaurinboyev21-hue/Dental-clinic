@@ -73,6 +73,8 @@ export async function GET(request: NextRequest) {
       .neq("status", "cancelled")
       .order("appointment_time", { ascending: true });
 
+    console.log("DEBUG mainQuery data=", JSON.stringify(data), "error=", JSON.stringify(error));
+
     if (error) throw new Error(error.message);
 
     const appointments = (data as Appointment[]) ?? [];
