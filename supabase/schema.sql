@@ -66,3 +66,22 @@ create policy "Patient files: yuklash (faqat xodimlar)" on storage.objects
 
 create policy "Patient files: o'chirish (faqat xodimlar)" on storage.objects
   for delete using (bucket_id = 'patient-files' and auth.role() = 'authenticated');
+
+-- Bepul reja xotira sarfini kuzatish uchun (/api/storage-check tomonidan chaqiriladi).
+-- Faqat service_role bajara oladi — anon/authenticated'ga ruxsat berilmagan.
+create or replace function get_storage_stats()
+returns table (db_size_bytes bigint, files_size_bytes bigint)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    pg_database_size(current_database()) as db_size_bytes,
+    coalesce(
+      (select sum((metadata->>'size')::bigint) from storage.objects where bucket_id = 'patient-files'),
+      0
+    ) as files_size_bytes;
+$$;
+
+revoke all on function get_storage_stats() from public, anon, authenticated;
+grant execute on function get_storage_stats() to service_role;
