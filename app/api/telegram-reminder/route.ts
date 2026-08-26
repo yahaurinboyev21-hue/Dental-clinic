@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
     const nowMinutes = tashkentNow.getUTCHours() * 60 + tashkentNow.getUTCMinutes();
 
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+    console.log("DEBUG url=", JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_URL));
     console.log("DEBUG todayISO=", todayISO, "nowMinutes=", nowMinutes);
     console.log(
       "DEBUG serviceKey len=",
