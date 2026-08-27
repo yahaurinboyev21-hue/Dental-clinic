@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PatientHistory } from "@/components/PatientHistory";
-import { Upload, Trash2, Loader2, AlertTriangle, X, Phone } from "lucide-react";
+import { Upload, Trash2, Loader2, AlertTriangle, X, Phone, Pencil } from "lucide-react";
 import { supabase, PATIENT_FILES_BUCKET, MAX_CONCURRENT_APPOINTMENTS } from "@/lib/supabase/client";
 import {
   compressImageFile,
@@ -97,17 +97,20 @@ export function AppointmentModal({
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [isViewMode, setIsViewMode] = useState(false);
 
   useEffect(() => {
     if (appointment) {
       const { id, created_at, payment_status, ...rest } = appointment;
       setForm(rest);
+      setIsViewMode(true);
     } else {
       setForm({
         ...EMPTY_FORM,
         appointment_date: date,
         appointment_time: defaultTime ?? "09:00",
       });
+      setIsViewMode(false);
     }
     setErrorMsg(null);
   }, [appointment, date, defaultTime, open]);
@@ -186,10 +189,105 @@ export function AppointmentModal({
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{appointment ? "Bemorni tahrirlash" : "Yangi bemor qo'shish"}</DialogTitle>
+        <DialogHeader className="flex-row items-center justify-between space-y-0 pr-6">
+          <DialogTitle>
+            {isViewMode ? "Bemor ma'lumotlari" : appointment ? "Bemorni tahrirlash" : "Yangi bemor qo'shish"}
+          </DialogTitle>
+          {isViewMode && (
+            <Button variant="outline" size="icon" onClick={() => setIsViewMode(false)} title="Tahrirlash">
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
         </DialogHeader>
 
+        {isViewMode ? (
+          <div className="space-y-3">
+            <div>
+              <div className="text-lg font-semibold">
+                {form.first_name} {form.last_name}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>{form.phone}</span>
+                {form.phone.replace(/\D/g, "").length >= 9 && (
+                  <a
+                    href={`tel:${form.phone.replace(/\D/g, "")}`}
+                    className="flex h-7 w-7 items-center justify-center rounded-md border border-input hover:bg-accent"
+                    title="Qo'ng'iroq qilish"
+                  >
+                    <Phone className="h-3.5 w-3.5" />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <div className="text-xs text-muted-foreground">Sana / Vaqt</div>
+                <div>
+                  {form.appointment_date} · {form.appointment_time.slice(0, 5)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Xizmat turi</div>
+                <div>{form.service}</div>
+              </div>
+            </div>
+
+            <div className="rounded-md bg-muted p-2 text-sm space-y-1">
+              <div className="flex items-center justify-between">
+                <span>Summasi: {formatUZS(form.amount)}</span>
+                <span>Olingan: {formatUZS(form.paid_amount)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>
+                  Qarzdorlik:{" "}
+                  <strong className={debt > 0 ? "text-destructive" : ""}>{formatUZS(debt)}</strong>
+                </span>
+                <span>
+                  Holat:{" "}
+                  {paymentStatus === "paid" ? "To'liq" : paymentStatus === "partial" ? "Qisman" : "To'lanmadi"}
+                </span>
+              </div>
+            </div>
+
+            <div className="text-sm">
+              <span className="text-xs text-muted-foreground">Qabul statusi: </span>
+              {STATUS_OPTIONS.find((s) => s.value === form.status)?.label}
+            </div>
+
+            {form.recall_date && (
+              <div className="text-sm">
+                <span className="text-xs text-muted-foreground">Keyingi chaqiruv: </span>
+                {form.recall_date}
+                {form.recall_time ? ` · ${form.recall_time.slice(0, 5)}` : ""}
+              </div>
+            )}
+
+            {form.file_url && isImageUrl(form.file_url) && (
+              <button type="button" onClick={() => setImagePreviewOpen(true)} className="block">
+                <img
+                  src={form.file_url}
+                  alt="Rentgen / Foto"
+                  className="h-24 w-24 rounded-md border object-cover"
+                />
+              </button>
+            )}
+            {form.file_url && !isImageUrl(form.file_url) && (
+              <a href={form.file_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">
+                Faylni ko'rish
+              </a>
+            )}
+
+            {form.notes && (
+              <div className="text-sm">
+                <div className="text-xs text-muted-foreground">Izoh</div>
+                <div className="whitespace-pre-wrap">{form.notes}</div>
+              </div>
+            )}
+
+            <PatientHistory phone={form.phone} excludeId={appointment?.id} />
+          </div>
+        ) : (
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label>Ism</Label>
@@ -390,22 +488,42 @@ export function AppointmentModal({
 
           <PatientHistory phone={form.phone} excludeId={appointment?.id} />
         </div>
+        )}
 
         {errorMsg && <p className="text-sm text-destructive">{errorMsg}</p>}
 
         <DialogFooter className="gap-2">
-          {appointment && onDelete && (
-            <Button variant="destructive" onClick={handleDelete} disabled={saving} className="mr-auto">
-              <Trash2 className="h-4 w-4 mr-1" /> O'chirish
-            </Button>
+          {isViewMode ? (
+            <>
+              {appointment && onDelete && (
+                <Button variant="destructive" onClick={handleDelete} disabled={saving} className="mr-auto">
+                  <Trash2 className="h-4 w-4 mr-1" /> O'chirish
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Yopish
+              </Button>
+            </>
+          ) : (
+            <>
+              {appointment && onDelete && (
+                <Button variant="destructive" onClick={handleDelete} disabled={saving} className="mr-auto">
+                  <Trash2 className="h-4 w-4 mr-1" /> O'chirish
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => (appointment ? setIsViewMode(true) : onOpenChange(false))}
+                disabled={saving}
+              >
+                Bekor qilish
+              </Button>
+              <Button onClick={handleSubmit} disabled={saving || uploading}>
+                {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                Saqlash
+              </Button>
+            </>
           )}
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Bekor qilish
-          </Button>
-          <Button onClick={handleSubmit} disabled={saving || uploading}>
-            {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
-            Saqlash
-          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
