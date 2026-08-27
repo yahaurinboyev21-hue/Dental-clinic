@@ -22,11 +22,16 @@ export async function GET(request: NextRequest) {
   }
 
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+  // Muammo/xotira ogohlantirishlari GURUHGA (TELEGRAM_ADMIN_CHAT_ID) va shaxsiy
+  // chatga (TELEGRAM_PERSONAL_CHAT_ID) — ikkalasiga ham yuboriladi. Bemorlar
+  // bo'yicha xabarlar (telegram-cron, telegram-reminder) esa faqat guruhga boradi.
+  const chatIds = [process.env.TELEGRAM_ADMIN_CHAT_ID, process.env.TELEGRAM_PERSONAL_CHAT_ID].filter(
+    (id): id is string => !!id
+  );
 
-  if (!botToken || !chatId) {
+  if (!botToken || chatIds.length === 0) {
     return NextResponse.json(
-      { error: "TELEGRAM_BOT_TOKEN yoki TELEGRAM_ADMIN_CHAT_ID sozlanmagan" },
+      { error: "TELEGRAM_BOT_TOKEN yoki chat ID'lar sozlanmagan" },
       { status: 500 }
     );
   }
@@ -51,14 +56,16 @@ export async function GET(request: NextRequest) {
         `🖼️ Fayllar (rasmlar): ${formatMB(filesBytes)} MB / 1024 MB (${Math.round(filesPercent * 100)}%)\n\n` +
         `Tavsiya: eski yozuvlarni Excel'ga eksport qilib arxivlang yoki Supabase rejasini yangilashni ko'rib chiqing.`;
 
-      const tgResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "HTML" }),
-      });
-      const tgResult = await tgResponse.json();
-      if (!tgResult.ok) {
-        console.error("Telegram xatoligi:", tgResult);
+      for (const chatId of chatIds) {
+        const tgResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "HTML" }),
+        });
+        const tgResult = await tgResponse.json();
+        if (!tgResult.ok) {
+          console.error(`Telegram xatoligi (chat ${chatId}):`, tgResult);
+        }
       }
     }
 
