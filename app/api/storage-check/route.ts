@@ -41,7 +41,8 @@ export async function GET(request: NextRequest) {
     const filesBytes = Number(stats.files_size_bytes ?? 0);
     const dbPercent = dbBytes / DB_LIMIT_BYTES;
     const filesPercent = filesBytes / STORAGE_LIMIT_BYTES;
-    const overThreshold = dbPercent >= WARNING_THRESHOLD || filesPercent >= WARNING_THRESHOLD;
+    const forceAlert = request.nextUrl.searchParams.get("force") === "true";
+    const overThreshold = forceAlert || dbPercent >= WARNING_THRESHOLD || filesPercent >= WARNING_THRESHOLD;
 
     if (overThreshold) {
       const message =
