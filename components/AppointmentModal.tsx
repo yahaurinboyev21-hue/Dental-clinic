@@ -30,18 +30,7 @@ import {
 } from "@/lib/utils";
 import type { Appointment, AppointmentInput, AppointmentStatus } from "@/types";
 
-const SERVICES = [
-  "Konsultatsiya",
-  "Tish davolash (karies)",
-  "Kanal davolash",
-  "Tish olib tashlash",
-  "Implantatsiya",
-  "Protezlash",
-  "Tish tozalash",
-  "Oqartirish",
-  "Breket taqish",
-  "Rentgen",
-];
+const SERVICES = ["Konsultatsiya", "Tish davolash (karies)", "Boshqa"];
 
 const STATUS_OPTIONS: { value: AppointmentStatus; label: string }[] = [
   { value: "pending", label: "🟡 Kutilmoqda" },
@@ -65,7 +54,7 @@ const EMPTY_FORM: AppointmentInput = {
   first_name: "",
   last_name: "",
   phone: "+998 ",
-  service: SERVICES[0],
+  service: "",
   amount: 0,
   paid_amount: 0,
   status: "pending",
