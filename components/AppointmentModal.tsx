@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PatientHistory } from "@/components/PatientHistory";
-import { Upload, Trash2, Loader2, AlertTriangle, X } from "lucide-react";
+import { Upload, Trash2, Loader2, AlertTriangle, X, Phone } from "lucide-react";
 import { supabase, PATIENT_FILES_BUCKET, MAX_CONCURRENT_APPOINTMENTS } from "@/lib/supabase/client";
 import {
   compressImageFile,
@@ -210,11 +210,22 @@ export function AppointmentModal({
 
           <div className="col-span-2 space-y-1">
             <Label>Telefon raqami</Label>
-            <Input
-              value={form.phone}
-              onChange={(e) => update("phone", formatPhoneInput(e.target.value))}
-              placeholder="+998 90 123 45 67"
-            />
+            <div className="flex gap-2">
+              <Input
+                value={form.phone}
+                onChange={(e) => update("phone", formatPhoneInput(e.target.value))}
+                placeholder="+998 90 123 45 67"
+              />
+              {form.phone.replace(/\D/g, "").length >= 9 && (
+                <a
+                  href={`tel:${form.phone.replace(/\D/g, "")}`}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input hover:bg-accent"
+                  title="Qo'ng'iroq qilish"
+                >
+                  <Phone className="h-4 w-4" />
+                </a>
+              )}
+            </div>
           </div>
 
           <div className="space-y-1">
@@ -251,7 +262,7 @@ export function AppointmentModal({
               list="services-list"
               value={form.service}
               onChange={(e) => update("service", e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base md:text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               placeholder="Xizmat turini tanlang yoki kiriting"
             />
             <datalist id="services-list">
