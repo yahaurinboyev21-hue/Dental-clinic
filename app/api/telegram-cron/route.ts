@@ -50,7 +50,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = createServiceRoleClient();
-    const todayISO = getTashkentDateISO();
+    // Sinov uchun ?date=YYYY-MM-DD orqali boshqa sanani ko'rsatish mumkin (CRON_SECRET bilan himoyalangan).
+    const dateOverride = request.nextUrl.searchParams.get("date");
+    const todayISO = dateOverride || getTashkentDateISO();
 
     const { data, error } = await supabase
       .from("appointments")
